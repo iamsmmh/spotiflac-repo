@@ -1,6 +1,20 @@
-# Example terminal commands
-mkdir -p .github/workflows
-mv workflow-checker.yml .github/workflows/
-git add .github/workflows/workflow-checker.yml
-git commit -m "Add automatic workflow syntax checker"
-git push origin main
+name: Auto Workflow Checker
+
+on:
+  push:
+    branches: [ "main", "master", "dev", "develop" ]
+  pull_request:
+    branches: [ "main", "master", "dev", "develop" ]
+
+jobs:
+  check-workflows:
+    name: Validate GitHub Actions
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Run Actionlint
+        uses: rhysd/actionlint-action@v1
+        with:
+          shellcheck: "shellcheck"
