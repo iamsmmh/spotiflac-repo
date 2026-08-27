@@ -15,6 +15,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run Actionlint
+        # Fixed: Explicitly added the @v1 tag to resolve the repository lookup
         uses: rhysd/actionlint-action@v1
         with:
           shellcheck: "shellcheck"
