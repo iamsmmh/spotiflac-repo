@@ -1,0 +1,70 @@
+name: Deploy Universal Sideload Repo Source
+
+on:
+  schedule:
+    - cron: '0 */6 * * *' # Automatically runs every 6 hours to check for updates
+  workflow_dispatch: # Allows you to trigger the script manually anytime
+
+jobs:
+  update-source:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Fetch Latest Release Data
+        run: |
+          # Fetch the latest release info from the official SpotiFLAC Mobile repo
+          RELEASE_INFO=$(curl -s "
+")
+          
+          # Extract attributes using clean text manipulation
+          VERSION_TAG=$(echo "$RELEASE_INFO" | grep '"tag_name":' | head -n 1 | sed -E 's/.*"v?([^"]+)".*/\1/')
+          RELEASE_DATE=$(echo "$RELEASE_INFO" | grep '"published_at":' | head -n 1 | sed -E 's/.*"([^T]+).*/\1/')
+          
+          # Match the exact IPA deployment file scheme used by SpotiFLAC
+          DOWNLOAD_URL="
+  {VERSION_TAG}-ios-unsigned.ipa"
+          
+          echo "Latest found version is v$VERSION_TAG released on $RELEASE_DATE"
+
+          # Write out the complete AltStore/SideStore/Feather structured JSON file dynamically
+          cat <<EOF > apps.json
+          {
+            "\$schema": "
+{VERSION_TAG}-ios-unsigned.ipa"
+          
+          echo "Latest found version is v$VERSION_TAG released on $RELEASE_DATE"
+
+          # Write out the complete AltStore/SideStore/Feather structured JSON file dynamically
+          cat <<EOF > apps.json
+          {
+            "\$schema": "
+",
+            "name": "SpotiFLAC Mobile Auto-Update",
+            "identifier": "com.spotiflac.autoupdate.source",
+            "apps": [
+              {
+                "name": "SpotiFLAC",
+                "bundleIdentifier": "com.spotiflac.app",
+                "developerName": "spotiflacapp",
+                "version": "$VERSION_TAG",
+                "versionDate": "$RELEASE_DATE",
+                "versionDescription": "Automatically tracked and generated source for SpotiFLAC Mobile.",
+                "downloadURL": "$DOWNLOAD_URL",
+                "iconURL": "https://githubusercontent.com",
+                "tintColor": "#1ED760",
+                "size": 36000000
+              }
+            ]
+          }
+          EOF
+
+      - name: Commit and Push Changes
+        run: |
+          git config --global user.name "GitHub Action"
+          git config --global user.email "actions@github.com"
+          git add apps.json
+          git commit -m "Auto-updated to latest SpotiFLAC release version" || exit 0
+          git push
+
