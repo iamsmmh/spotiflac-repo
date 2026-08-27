@@ -14,8 +14,6 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Install and Run Actionlint Directly
-        run: |
-          bash <(curl -SFs https://githubusercontent.com)
-          ./actionlint
-
+      - name: Run Actionlint
+        uses: rhysd/actionlint-action@v1
+        # REMOVED: the redundant 'with: shellcheck' block that caused Exit 127
