@@ -1,0 +1,22 @@
+{
+  "name": "SpotiFLAC Mobile Repo",
+  "identifier": "com.github.spotiflac.repo",
+  "apps": [
+    {
+      "name": "SpotiFLAC",
+      "bundleIdentifier": "com.spotiflac.mobile",
+      "developerName": "spotiflacapp",
+      "version": "1.0.0",
+      "versionDate": "2026-01-01T00:00:00Z",
+      "versionDescription": "Initial setup. Run the 
+ to auto-populate the latest build metadata.",
+      "downloadURL": "
+",
+      "iconURL": "https://githubusercontent.com",
+      "size": 1000000,
+      "subtitle": "Lossless Music Client",
+      "localizedDescription": "Download lossless FLAC music from multiple providers directly into your iOS environment."
+    }
+  ]
+}
+      
