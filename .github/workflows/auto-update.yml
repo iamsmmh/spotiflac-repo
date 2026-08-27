@@ -1,0 +1,42 @@
+name: Auto Update Repo & Clean YAML
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-format:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python Toolchain
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Prettier to Fix YAML Format
+        run: npm install -g prettier
+
+      - name: Auto-Fix YAML Formatting Errors
+        run: prettier --write ".github/workflows/*.yml"
+
+      - name: Run Repository Auto-Updater
+        run: python update_repo.py
+
+      - name: Check and Commit Changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@://github.com"
+          git add apps.json .github/workflows/*.yml
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: auto-sync metadata definitions & fix syntax layouts"
+            git push
+          else
+            echo "No structural modification changes detected."
+          fi
