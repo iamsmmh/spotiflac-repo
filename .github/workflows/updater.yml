@@ -1,0 +1,86 @@
+name: Auto Update SideStore Repo
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-repo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Fetch Latest SpotiFLAC Release and Update JSON
+        run: |
+          python - << 'EOF'
+          import urllib.request
+          import json
+          import re
+          from datetime import datetime
+
+          try:
+              url = "
+"
+              req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+              with urllib.request.urlopen(req) as response:
+                  data = json.loads(response.read().decode())
+              
+              version = data['tag_name'].replace('v', '')
+              pub_date = data['published_at']
+              body = data.get('body', 'No description provided.')
+
+              download_url = ""
+              file_size = 0
+              for asset in data.get('assets', []):
+                  if asset['name'].endswith('.ipa'):
+                      download_url = asset['browser_download_url']
+                      file_size = asset['size']
+                      break
+              
+              if not download_url:
+                  print("No IPA file found in the latest release.")
+                  exit(0)
+
+              with open('apps.json', 'r') as f:
+                  repo_data = json.load(f)
+
+              app = repo_data['apps'][0]
+              
+              if app['version'] != version or app['downloadURL'] != download_url:
+                  print(f"Updating apps.json to version {version}...")
+                  app['version'] = version
+                  app['versionDate'] = pub_date
+                  app['versionDescription'] = body[:500]
+                  app['downloadURL'] = download_url
+                  app['size'] = file_size
+                  
+                  with open('apps.json', 'w') as f:
+                      json.dump(repo_data, f, indent=2)
+              else:
+                  print("Repository is already up to date.")
+          except Exception as e:
+              print(f"Error occurred: {e}")
+              exit(1)
+          EOF
+
+      - name: Commit and Push Changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@://github.com"
+          git add apps.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Auto-update SpotiFLAC Mobile source to latest release"
+            git push
+          else
+            echo "No changes to commit."
+          fi
